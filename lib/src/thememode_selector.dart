@@ -77,7 +77,7 @@ class ThemeModeSelector extends StatefulWidget {
   final Color? _lightToggleColor;
   final Color? _darkToggleColor;
   final _ThemeModeSelectorConsts _consts;
-  final ValueChanged<ThemeMode>? _onChanged;
+  final ValueChanged<ThemeMode> _onChanged;
 
   /// Creates a ThemeMode Selector.
   ///
@@ -101,8 +101,8 @@ class ThemeModeSelector extends StatefulWidget {
     Color? darkBackground,
     Color? darkToggle,
     double height = 39,
-    ValueChanged<ThemeMode>? onChanged,
-  })  : _durationInMs = durationInMs,
+    required ValueChanged<ThemeMode> onChanged,
+  })   : _durationInMs = durationInMs,
         _onChanged = onChanged,
         _lightBackgroundColor = lightBackground,
         _lightToggleColor = lightToggle,
@@ -161,9 +161,9 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
         reverseCurve: Interval(0.0, 0.9, curve: Curves.easeInBack),
       )..addStatusListener((status) {
           if (status == AnimationStatus.completed) {
-            widget._onChanged!(ThemeMode.dark);
+            widget._onChanged(ThemeMode.dark);
           } else if (status == AnimationStatus.dismissed) {
-            widget._onChanged!(ThemeMode.light);
+            widget._onChanged(ThemeMode.light);
           }
         }),
     );
@@ -190,7 +190,8 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if(Theme.of(context).brightness == Brightness.dark) _animationController.forward();
+    if (Theme.of(context).brightness == Brightness.dark)
+      _animationController.forward();
   }
 
   // Builds the semi-complex tween for the stars and flares which aninate to
