@@ -8,24 +8,24 @@ import 'star.dart';
 import 'sun.dart';
 
 class _ThemeModeSelectorConsts {
-  Size size;
-  EdgeInsets padding;
-  EdgeInsets focusPadding;
-  Size inset;
-  double toggleDiameter;
+  late Size size;
+  EdgeInsets? padding;
+  EdgeInsets? focusPadding;
+  late Size inset;
+  late double toggleDiameter;
   List<dynamic> stars = [];
   List<dynamic> flares = [];
 
   _ThemeModeSelectorConsts(double height) {
     focusPadding = EdgeInsets.all(2);
-    height = height - focusPadding.bottom - focusPadding.top;
+    height = height - focusPadding!.bottom - focusPadding!.top;
     var width = height * 100 / 56;
     size = Size(width, height);
     padding = EdgeInsets.fromLTRB(
         width * .11, width * .085, width * .11, width * .085);
-    var insetWidth = width - padding.left - padding.right;
+    var insetWidth = width - padding!.left - padding!.right;
 
-    var insetHeight = height - padding.top - padding.bottom;
+    var insetHeight = height - padding!.top - padding!.bottom;
     toggleDiameter = insetHeight;
     inset = Size(insetWidth, toggleDiameter);
 
@@ -72,12 +72,12 @@ class _ThemeModeSelectorConsts {
 /// A ThemeMode Selector widget designed by Zhenya Karapetyan
 class ThemeModeSelector extends StatefulWidget {
   final int _durationInMs;
-  final Color _lightBackgroundColor;
-  final Color _darkBackgroundColor;
-  final Color _lightToggleColor;
-  final Color _darkToggleColor;
+  final Color? _lightBackgroundColor;
+  final Color? _darkBackgroundColor;
+  final Color? _lightToggleColor;
+  final Color? _darkToggleColor;
   final _ThemeModeSelectorConsts _consts;
-  final ValueChanged<ThemeMode> _onChanged;
+  final ValueChanged<ThemeMode>? _onChanged;
 
   /// Creates a ThemeMode Selector.
   ///
@@ -94,14 +94,14 @@ class ThemeModeSelector extends StatefulWidget {
   ///   foreground and background colors representing the "dark" theme mode
   ///
   ThemeModeSelector({
-    Key key,
+    Key? key,
     durationInMs = 750,
-    Color lightBackground,
-    Color lightToggle,
-    Color darkBackground,
-    Color darkToggle,
+    Color? lightBackground,
+    Color? lightToggle,
+    Color? darkBackground,
+    Color? darkToggle,
     double height = 39,
-    ValueChanged<ThemeMode> onChanged,
+    ValueChanged<ThemeMode>? onChanged,
   })  : _durationInMs = durationInMs,
         _onChanged = onChanged,
         _lightBackgroundColor = lightBackground,
@@ -117,15 +117,15 @@ class ThemeModeSelector extends StatefulWidget {
 
 class _ThemeModeSelectorState extends State<ThemeModeSelector>
     with SingleTickerProviderStateMixin {
-  AnimationController _animationController;
+  late AnimationController _animationController;
   Set<MaterialState> _states = {};
 
-  Animation<Alignment> _alignmentAnimation;
-  Animation<double> _starFade;
-  Animation<double> _flareFade;
-  Animation<double> _starToggleFade;
-  Animation<double> _flareToggleFade;
-  Animation<Color> _bgColorAnimation;
+  late Animation<Alignment> _alignmentAnimation;
+  Animation<double>? _starFade;
+  Animation<double>? _flareFade;
+  late Animation<double> _starToggleFade;
+  late Animation<double> _flareToggleFade;
+  late Animation<Color?> _bgColorAnimation;
 
   bool isChecked = false;
 
@@ -161,9 +161,9 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
         reverseCurve: Interval(0.0, 0.9, curve: Curves.easeInBack),
       )..addStatusListener((status) {
           if (status == AnimationStatus.completed) {
-            widget._onChanged(ThemeMode.dark);
+            widget._onChanged!(ThemeMode.dark);
           } else if (status == AnimationStatus.dismissed) {
-            widget._onChanged(ThemeMode.light);
+            widget._onChanged!(ThemeMode.light);
           }
         }),
     );

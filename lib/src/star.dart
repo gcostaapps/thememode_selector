@@ -3,10 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 class Star extends StatelessWidget {
-  final double size;
-  final Color color;
+  final double? size;
+  final Color? color;
 
-  const Star({Key key, this.size, this.color}) : super(key: key);
+  const Star({Key? key, this.size, this.color}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -17,8 +17,8 @@ class Star extends StatelessWidget {
 }
 
 class _StarPainter extends CustomPainter {
-  final double diameter;
-  final Color color;
+  final double? diameter;
+  final Color? color;
   final int sides = 10;
 
   _StarPainter({this.diameter, this.color});
@@ -26,12 +26,12 @@ class _StarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint()
-      ..color = color
+      ..color = color!
       ..strokeWidth = 1;
 
     var path = Path();
     var angle = math.pi * 2 / sides;
-    var radius = diameter / 2;
+    var radius = diameter! / 2;
     var radians = -math.pi / 2; // Starting at 90° for the point of the star
 
     path.moveTo(radius, 0);

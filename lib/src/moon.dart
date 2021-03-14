@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class Moon extends StatelessWidget {
-  final double size;
+  final double? size;
   final Color color;
 
-  const Moon({Key key, this.size, this.color = Colors.white}) : super(key: key);
+  const Moon({Key? key, this.size, this.color = Colors.white}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
