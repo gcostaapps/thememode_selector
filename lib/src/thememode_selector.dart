@@ -187,13 +187,6 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
     super.dispose();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (Theme.of(context).brightness == Brightness.dark)
-      _animationController.forward();
-  }
-
   // Builds the semi-complex tween for the stars and flares which aninate to
   // and fro from the center of the widget
   Animation<RelativeRect> slide(Offset from, Offset to, double size) {
