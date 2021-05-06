@@ -137,8 +137,9 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
   void initState() {
     super.initState();
     isChecked = widget._isChecked;
-    // Setup the global animation controller using the duration parameter
-    // todo: what happens when the duration changes? Is the widget rebuilt? Does initState run again?
+  }
+
+  initialize(BuildContext context, ThemeModeSelectorThemeData myTheme) {
     Duration _duration = Duration(milliseconds: widget._durationInMs);
 
     _animationController = AnimationController(
@@ -146,9 +147,6 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
       duration: _duration,
       value: isChecked ? 1 : 0,
     );
-  }
-
-  initialize(BuildContext context, ThemeModeSelectorThemeData myTheme) {
     // Setup the tween for the background colors
     _bgColorAnimation = ColorTween(
       begin: lightBackgroundColor(myTheme) as Color,
