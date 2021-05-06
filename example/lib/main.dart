@@ -75,6 +75,7 @@ class HomePage extends StatelessWidget {
       body: Center(
         child: ThemeModeSelector(
           height: 39,
+          isChecked: false,
           onChanged: (mode) {
             print('ThemeMode changed to $mode');
             // Again, this could be using whatever approach to state
