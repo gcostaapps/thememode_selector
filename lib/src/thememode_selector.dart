@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:thememode_selector/src/focus_background.dart';
-import 'package:thememode_selector/thememode_selector.dart';
+import 'package:flutter/rendering.dart';
+import '../thememode_selector.dart';
 import 'celestial_transition.dart';
 import 'flare.dart';
+import 'focus_background.dart';
 import 'moon.dart';
 import 'star.dart';
 import 'sun.dart';
@@ -77,6 +78,7 @@ class ThemeModeSelector extends StatefulWidget {
   final Color? _lightToggleColor;
   final Color? _darkToggleColor;
   final _ThemeModeSelectorConsts _consts;
+  final bool _isChecked;
   final ValueChanged<ThemeMode> _onChanged;
 
   /// Creates a ThemeMode Selector.
@@ -95,12 +97,13 @@ class ThemeModeSelector extends StatefulWidget {
   ///
   ThemeModeSelector({
     Key? key,
-    durationInMs = 750,
+    int durationInMs = 750,
     Color? lightBackground,
     Color? lightToggle,
     Color? darkBackground,
     Color? darkToggle,
     double height = 39,
+    required bool isChecked,
     required ValueChanged<ThemeMode> onChanged,
   })   : _durationInMs = durationInMs,
         _onChanged = onChanged,
@@ -109,6 +112,7 @@ class ThemeModeSelector extends StatefulWidget {
         _darkBackgroundColor = darkBackground,
         _darkToggleColor = darkToggle,
         _consts = _ThemeModeSelectorConsts(height),
+        _isChecked = isChecked,
         super(key: key);
 
   @override
@@ -127,12 +131,12 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
   late Animation<double> _flareToggleFade;
   late Animation<Color?> _bgColorAnimation;
 
-  bool isChecked = false;
+  late bool isChecked;
 
   @override
   void initState() {
     super.initState();
-
+    isChecked = widget._isChecked;
     // Setup the global animation controller using the duration parameter
     // todo: what happens when the duration changes? Is the widget rebuilt? Does initState run again?
     Duration _duration = Duration(milliseconds: widget._durationInMs);
@@ -140,14 +144,15 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
     _animationController = AnimationController(
       vsync: this,
       duration: _duration,
+      value: isChecked ? 1 : 0,
     );
   }
 
   initialize(BuildContext context, ThemeModeSelectorThemeData myTheme) {
     // Setup the tween for the background colors
     _bgColorAnimation = ColorTween(
-      begin: lightBackgroundColor(myTheme),
-      end: darkBackgroundColor(myTheme),
+      begin: lightBackgroundColor(myTheme) as Color,
+      end: darkBackgroundColor(myTheme) as Color,
     ).animate(_animationController);
 
     // the tween for the toggle button (left and right)
@@ -159,13 +164,7 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
         parent: _animationController,
         curve: Interval(0.0, 0.9, curve: Curves.easeOutBack),
         reverseCurve: Interval(0.0, 0.9, curve: Curves.easeInBack),
-      )..addStatusListener((status) {
-          if (status == AnimationStatus.completed) {
-            widget._onChanged(ThemeMode.dark);
-          } else if (status == AnimationStatus.dismissed) {
-            widget._onChanged(ThemeMode.light);
-          }
-        }),
+      ),
     );
 
     // Tweens and animation for the stars and flares
@@ -223,7 +222,6 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
       Color(0xFF040507);
 
   void _handleFocusHighlight(bool value) {
-    print('_handleFocusHighlight($value)');
     bool modified = value
         ? _states.add(MaterialState.focused)
         : _states.remove(MaterialState.focused);
@@ -231,7 +229,6 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
   }
 
   void _handleHoverHighlight(bool value) {
-    print('_handleHoverHighlight($value)');
     bool modified = value
         ? _states.add(MaterialState.hovered)
         : _states.remove(MaterialState.hovered);
@@ -241,93 +238,104 @@ class _ThemeModeSelectorState extends State<ThemeModeSelector>
   @override
   Widget build(BuildContext context) {
     ThemeModeSelectorThemeData myTheme = ThemeModeSelectorTheme.of(context);
+
     initialize(context, myTheme);
 
     return FocusableActionDetector(
       onShowFocusHighlight: _handleFocusHighlight,
       onShowHoverHighlight: _handleHoverHighlight,
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                if (_animationController.isCompleted) {
-                  _animationController.reverse();
-                } else {
-                  _animationController.forward();
-                }
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () {
+            setState(() {
+              if (isChecked) {
+                _animationController.reverse();
+              } else {
+                _animationController.forward();
+              }
 
-                isChecked = !isChecked;
-              });
-            },
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: widget._consts.size.width,
-                  height: widget._consts.size.height,
-                  padding: widget._consts.padding,
-                  decoration: BoxDecoration(
-                    color: _bgColorAnimation.value,
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(widget._consts.size.height),
+              isChecked = !isChecked;
+              widget._onChanged(isChecked ? ThemeMode.dark : ThemeMode.light);
+            });
+          },
+          child: AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, child) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: widget._consts.size.width,
+                    height: widget._consts.size.height,
+                    padding: widget._consts.padding,
+                    decoration: BoxDecoration(
+                      color: _bgColorAnimation.value,
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(widget._consts.size.height),
+                      ),
+                    ),
+                    child: Stack(
+                      children: <Widget>[
+                        ...widget._consts.stars
+                            .map((star) => CelestialTransition(
+                                  alphaAnimation: _starFade,
+                                  child: Star(
+                                      size: star['size'] as double?,
+                                      color:
+                                          lightToggleColor(myTheme) as Color),
+                                  relativeRectAnimation: slide(
+                                      star['from'] as Offset,
+                                      star['to'] as Offset,
+                                      star['size'] as double),
+                                ))
+                            .toList(),
+                        ...widget._consts.flares
+                            .map((flare) => CelestialTransition(
+                                  alphaAnimation: _flareFade,
+                                  child: Flare(
+                                      size: flare['size'] as double?,
+                                      color:
+                                          lightToggleColor(myTheme) as Color),
+                                  relativeRectAnimation: slide(
+                                      flare['from'] as Offset,
+                                      flare['to'] as Offset,
+                                      flare['size'] as double),
+                                ))
+                            .toList(),
+                        Align(
+                          alignment: _alignmentAnimation.value,
+                          child: Stack(children: [
+                            FadeTransition(
+                              opacity: _flareToggleFade,
+                              child: Sun(
+                                color: lightToggleColor(myTheme) as Color,
+                                size: widget._consts.inset.height,
+                              ),
+                            ),
+                            FadeTransition(
+                              opacity: _starToggleFade,
+                              child: Moon(
+                                color: darkToggleColor(myTheme) as Color,
+                                size: widget._consts.inset.height,
+                              ),
+                            ),
+                          ]),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Stack(
-                    children: <Widget>[
-                      ...widget._consts.stars
-                          .map((star) => CelestialTransition(
-                                alphaAnimation: _starFade,
-                                child: Star(
-                                    size: star['size'],
-                                    color: lightToggleColor(myTheme)),
-                                relativeRectAnimation: slide(
-                                    star['from'], star['to'], star['size']),
-                              ))
-                          .toList(),
-                      ...widget._consts.flares
-                          .map((flare) => CelestialTransition(
-                                alphaAnimation: _flareFade,
-                                child: Flare(
-                                    size: flare['size'],
-                                    color: lightToggleColor(myTheme)),
-                                relativeRectAnimation: slide(
-                                    flare['from'], flare['to'], flare['size']),
-                              ))
-                          .toList(),
-                      Align(
-                        alignment: _alignmentAnimation.value,
-                        child: Stack(children: [
-                          FadeTransition(
-                            opacity: _flareToggleFade,
-                            child: Sun(
-                              color: lightToggleColor(myTheme),
-                              size: widget._consts.inset.height,
-                            ),
-                          ),
-                          FadeTransition(
-                            opacity: _starToggleFade,
-                            child: Moon(
-                              color: darkToggleColor(myTheme),
-                              size: widget._consts.inset.height,
-                            ),
-                          ),
-                        ]),
-                      ),
-                    ],
+                  FocusBackground(
+                    padding: widget._consts.focusPadding,
+                    focused: _states.contains(MaterialState.focused),
+                    width: widget._consts.size.width,
+                    height: widget._consts.size.height,
                   ),
-                ),
-                FocusBackground(
-                  padding: widget._consts.focusPadding,
-                  focused: _states.contains(MaterialState.focused),
-                  width: widget._consts.size.width,
-                  height: widget._consts.size.height,
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }
