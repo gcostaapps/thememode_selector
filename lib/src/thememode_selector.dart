@@ -104,7 +104,6 @@ class ThemeModeSelector extends HookWidget {
     Color? darkBackground,
     Color? darkToggle,
     double height = 39,
-    this.animationController,
     required bool isChecked,
     required ValueChanged<ThemeMode> onChanged,
   })  : _durationInMs = durationInMs,
@@ -117,7 +116,6 @@ class ThemeModeSelector extends HookWidget {
         _isChecked = isChecked,
         super(key: key);
 
-  final AnimationController? animationController;
   late AnimationController _animationController;
   Set<MaterialState> _states = {};
 
@@ -129,17 +127,16 @@ class ThemeModeSelector extends HookWidget {
   late Animation<Color?> _bgColorAnimation;
   late ValueNotifier<bool> isChecked;
 
-  initialize(BuildContext context, ThemeModeSelectorThemeData myTheme) {
+  _initialize(BuildContext context, ThemeModeSelectorThemeData myTheme) {
     Duration _duration = Duration(milliseconds: _durationInMs);
 
-    _animationController = animationController ??
-        useAnimationController(
-            duration: _duration, initialValue: isChecked.value ? 1 : 0);
+    _animationController = useAnimationController(
+        duration: _duration, initialValue: isChecked.value ? 1 : 0);
 
     // Setup the tween for the background colors
     _bgColorAnimation = ColorTween(
-      begin: lightBackgroundColor(myTheme) as Color,
-      end: darkBackgroundColor(myTheme) as Color,
+      begin: _getLightBackgroundColor(myTheme) as Color,
+      end: _getDarkBackgroundColor(myTheme) as Color,
     ).animate(_animationController);
 
     // the tween for the toggle button (left and right)
@@ -169,7 +166,7 @@ class ThemeModeSelector extends HookWidget {
 
   // Builds the semi-complex tween for the stars and flares which aninate to
   // and fro from the center of the widget
-  Animation<RelativeRect> slide(Offset from, Offset to, double size) {
+  Animation<RelativeRect> _slide(Offset from, Offset to, double size) {
     var container =
         Rect.fromLTWH(0, 0, _consts.inset.width, _consts.inset.height);
     return RelativeRectTween(
@@ -186,40 +183,42 @@ class ThemeModeSelector extends HookWidget {
     ));
   }
 
-  lightToggleColor(myTheme) =>
+  _getLightToggleColor(myTheme) =>
       _lightToggleColor ?? myTheme.lightToggleColor ?? Colors.white;
 
-  lightBackgroundColor(myTheme) =>
+  _getLightBackgroundColor(myTheme) =>
       _lightBackgroundColor ??
       myTheme.lightBackgroundColor ??
       Color(0xFF689DFF);
 
-  darkToggleColor(myTheme) =>
+  _getDarkToggleColor(myTheme) =>
       _darkToggleColor ?? myTheme.darkToggleColor ?? Colors.white;
 
-  darkBackgroundColor(myTheme) =>
+  _getDarkBackgroundColor(myTheme) =>
       _darkBackgroundColor ?? myTheme.darkBackgroundColor ?? Color(0xFF040507);
+
+  toggle() {
+    if (isChecked.value) {
+      _animationController.reverse();
+    } else {
+      _animationController.forward();
+    }
+
+    isChecked.value = !isChecked.value;
+    _onChanged(isChecked.value ? ThemeMode.dark : ThemeMode.light);
+  }
 
   @override
   Widget build(BuildContext context) {
     ThemeModeSelectorThemeData myTheme = ThemeModeSelectorTheme.of(context);
     isChecked = useState(_isChecked);
 
-    initialize(context, myTheme);
+    _initialize(context, myTheme);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () {
-          if (isChecked.value) {
-            _animationController.reverse();
-          } else {
-            _animationController.forward();
-          }
-
-          isChecked.value = !isChecked.value;
-          _onChanged(isChecked.value ? ThemeMode.dark : ThemeMode.light);
-        },
+        onTap: () => toggle(),
         child: AnimatedBuilder(
           animation: _animationController,
           builder: (context, child) {
@@ -243,8 +242,9 @@ class ThemeModeSelector extends HookWidget {
                                 alphaAnimation: _starFade,
                                 child: Star(
                                     size: star['size'] as double?,
-                                    color: lightToggleColor(myTheme) as Color),
-                                relativeRectAnimation: slide(
+                                    color:
+                                        _getLightToggleColor(myTheme) as Color),
+                                relativeRectAnimation: _slide(
                                     star['from'] as Offset,
                                     star['to'] as Offset,
                                     star['size'] as double),
@@ -255,8 +255,9 @@ class ThemeModeSelector extends HookWidget {
                                 alphaAnimation: _flareFade,
                                 child: Flare(
                                     size: flare['size'] as double?,
-                                    color: lightToggleColor(myTheme) as Color),
-                                relativeRectAnimation: slide(
+                                    color:
+                                        _getLightToggleColor(myTheme) as Color),
+                                relativeRectAnimation: _slide(
                                     flare['from'] as Offset,
                                     flare['to'] as Offset,
                                     flare['size'] as double),
@@ -268,14 +269,14 @@ class ThemeModeSelector extends HookWidget {
                           FadeTransition(
                             opacity: _flareToggleFade,
                             child: Sun(
-                              color: lightToggleColor(myTheme) as Color,
+                              color: _getLightToggleColor(myTheme) as Color,
                               size: _consts.inset.height,
                             ),
                           ),
                           FadeTransition(
                             opacity: _starToggleFade,
                             child: Moon(
-                              color: darkToggleColor(myTheme) as Color,
+                              color: _getDarkToggleColor(myTheme) as Color,
                               size: _consts.inset.height,
                             ),
                           ),
