@@ -104,9 +104,10 @@ class ThemeModeSelector extends HookWidget {
     Color? darkBackground,
     Color? darkToggle,
     double height = 39,
+    this.animationController,
     required bool isChecked,
     required ValueChanged<ThemeMode> onChanged,
-  })   : _durationInMs = durationInMs,
+  })  : _durationInMs = durationInMs,
         _onChanged = onChanged,
         _lightBackgroundColor = lightBackground,
         _lightToggleColor = lightToggle,
@@ -116,6 +117,7 @@ class ThemeModeSelector extends HookWidget {
         _isChecked = isChecked,
         super(key: key);
 
+  final AnimationController? animationController;
   late AnimationController _animationController;
   Set<MaterialState> _states = {};
 
@@ -130,8 +132,9 @@ class ThemeModeSelector extends HookWidget {
   initialize(BuildContext context, ThemeModeSelectorThemeData myTheme) {
     Duration _duration = Duration(milliseconds: _durationInMs);
 
-    _animationController = useAnimationController(
-        duration: _duration, initialValue: isChecked.value ? 1 : 0);
+    _animationController = animationController ??
+        useAnimationController(
+            duration: _duration, initialValue: isChecked.value ? 1 : 0);
 
     // Setup the tween for the background colors
     _bgColorAnimation = ColorTween(
